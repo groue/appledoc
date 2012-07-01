@@ -262,6 +262,7 @@
 
 	// If all lines start with a *, ignore the prefix. Note that we ignore first line as it can only contain /** and text! We also ignore last line as if it only contains */
 	NSString *prefixRegex = @"(?m:^\\s*\\*[ ]*)";
+    __block NSUInteger prefixLength = NSIntegerMax;
 	__block BOOL stripPrefix = ([strippedLines count] > 1);
 	if (stripPrefix) {
 		[strippedLines enumerateObjectsUsingBlock:^(NSString *line, NSUInteger idx, BOOL *stop) {
@@ -269,10 +270,17 @@
 			if (idx == [strippedLines count]-1 && [stripped length] == 0) {
 				return;
 			}
-			if ((!multiline || idx > 0) && ![stripped isMatchedByRegex:prefixRegex]) {
+            if (multiline && idx <= 0) {
+                return;
+            }
+            NSRange prefixRange = [stripped rangeOfRegex:prefixRegex];
+            if (prefixRange.location == NSNotFound) {
 				stripPrefix = NO;
 				*stop = YES;
-			}
+            } else if (prefixRange.length < stripped.length) {
+                // non empty lines update the prefixLength
+                prefixLength = MIN(prefixLength, prefixRange.length);
+            }
 		}];
 	}
 	
@@ -280,13 +288,16 @@
 	NSArray *preprocessedLines = [self linesByReorderingHeaderDocDirectives:strippedLines];
     
 	// Finally remove common line prefix and a single prefix space (but leave multiple spaces to properly handle space prefixed example blocks!) and compose all objects into final comment.
-	NSCharacterSet *spacesSet = [NSCharacterSet characterSetWithCharactersInString:@" "];
-	NSString *spacesPrefixRegex = @"^ {2,}";
-	NSString *tabPrefixRegex = @"^\t";
 	NSMutableString *result = [NSMutableString stringWithCapacity:[value length]];
 	[preprocessedLines enumerateObjectsUsingBlock:^(NSString *line, NSUInteger idx, BOOL *stop) {
-		if (stripPrefix) line = [line stringByReplacingOccurrencesOfRegex:prefixRegex withString:@""];
-		if (![line isMatchedByRegex:spacesPrefixRegex] && ![line isMatchedByRegex:tabPrefixRegex]) line = [line stringByTrimmingCharactersInSet:spacesSet];
+		if (stripPrefix) {
+            line = [line stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+            if (line.length >= prefixLength) {
+                line = [line substringFromIndex:prefixLength];
+            } else {
+                line = @"";
+            }
+        }
         line = [self lineByPreprocessingHeaderDocDirectives:line];
 		[result appendString:line];
 		if (idx < [strippedLines count] - 1) [result appendString:@"\n"];
