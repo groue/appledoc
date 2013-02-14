@@ -65,13 +65,13 @@
 	assertThat(settings2.docsetInstallPath, is(self.currentPath));
 }
 
-- (void)testDocsetUtilPath_shouldAssignValueToSettings {
+- (void)testXcrunPath_shouldAssignValueToSettings {
 	// setup & execute
-	GBApplicationSettingsProvider *settings1 = [self settingsByRunningWithArgs:@"--docsetutil-path", @"path", nil];
-	GBApplicationSettingsProvider *settings2 = [self settingsByRunningWithArgs:@"--docsetutil-path", @".", nil];
+	GBApplicationSettingsProvider *settings1 = [self settingsByRunningWithArgs:@"--xcrun-path", @"path", nil];
+	GBApplicationSettingsProvider *settings2 = [self settingsByRunningWithArgs:@"--xcrun-path", @".", nil];
 	// verify
-	assertThat(settings1.docsetUtilPath, is(@"path"));
-	assertThat(settings2.docsetUtilPath, is(self.currentPath));
+	assertThat(settings1.xcrunPath, is(@"path"));
+	assertThat(settings2.xcrunPath, is(self.currentPath));
 }
 
 - (void)testIndexDesc_shouldAssignValueToSettings {
@@ -210,6 +210,17 @@
 	assertThatBool(settings1.installDocSet, equalToBool(YES));
 	assertThatBool(settings1.publishDocSet, equalToBool(YES));
 	assertThatBool(settings2.publishDocSet, equalToBool(NO));
+}
+
+- (void)testUseAppleAnchors_shouldAssignValueToSettings {
+	// setup & execute
+	GBApplicationSettingsProvider *settings1 = [self settingsByRunningWithArgs:@"--html-anchors", @"appledoc", nil];
+	GBApplicationSettingsProvider *settings2 = [self settingsByRunningWithArgs:@"--html-anchors", @"apple", nil];
+	GBApplicationSettingsProvider *settings3 = [self settingsByRunningWithArgs:nil];
+	// verify
+	assertThatBool(settings1.htmlAnchorFormat, equalToInt(GBHTMLAnchorFormatAppleDoc));
+	assertThatBool(settings2.htmlAnchorFormat, equalToInt(GBHTMLAnchorFormatApple));
+	assertThatBool(settings3.htmlAnchorFormat, equalToInt(GBHTMLAnchorFormatAppleDoc));
 }
 
 - (void)testKeepIntermediateFiles_shouldAssignValueToSettings {
@@ -452,6 +463,14 @@
 	assertThat(settings.docsetFeedURL, is(@"value"));
 }
 
+- (void)testDocSetFeedFormat_shouldAssignValueToSettings {
+    
+    // setup & execute
+    GBApplicationSettingsProvider *settings = [self settingsByRunningWithArgs:@"--docset-feed-formats", @"value", nil];
+    // verify
+    assertThat(settings.docsetFeedFormats, is(@"value"));
+}
+
 - (void)testDocSetPackageURL_shouldAssignValueToSettings {
 	// setup & execute
 	GBApplicationSettingsProvider *settings = [self settingsByRunningWithArgs:@"--docset-package-url", @"value", nil];
@@ -520,6 +539,13 @@
 	GBApplicationSettingsProvider *settings = [self settingsByRunningWithArgs:@"--docset-atom-filename", @"value", nil];
 	// verify
 	assertThat(settings.docsetAtomFilename, is(@"value"));
+}
+
+- (void)testDocSetXMLFilename_shouldAssignValueToSettings {
+	// setup & execute
+	GBApplicationSettingsProvider *settings = [self settingsByRunningWithArgs:@"--docset-xml-filename", @"value", nil];
+	// verify
+	assertThat(settings.docsetXMLFilename, is(@"value"));
 }
 
 - (void)testDocSetPackageFilename_shouldAssignValueToSettings {
